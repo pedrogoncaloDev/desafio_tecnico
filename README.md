@@ -58,7 +58,7 @@ Permite realizar operações de **CRUD de clientes** (criar, listar, editar e ex
         Validade DATE,
         DataHoraCadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-    2. *Restaure o banco back_end/backup_databse*
+    2. *Ou restaure o backup do banco na pasta back_end/backup_databse*
 
 4. **Instale as dependências do back-end:**
     ```bash
