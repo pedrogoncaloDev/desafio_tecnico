@@ -1,37 +1,54 @@
 <template>
-  <v-card class="grid-card mx-auto" max-width="1200">
+  <v-card class="grid-card mx-auto" max-width="1600"> <!-- largura maior -->
     <v-toolbar flat>
       <v-toolbar-title>Clientes</v-toolbar-title>
       <v-spacer />
+
+      <!-- Filtros -->
       <v-text-field
-        v-model="search"
-        label="Pesquisar"
-        prepend-inner-icon="mdi-magnify"
-        loading-text="Carregando clientes..."
-        no-data-text="Nenhum cliente cadastrado"
-        :items-per-page-options="[
-                                  {value: 10, title: '10'},
-                                  {value: 25, title: '25'},
-                                  {value: 50, title: '50'},
-                                  {value: 100, title: '100'},
-                                  {value: -1, title: 'Todos'}
-                                ]"
-        items-per-page-text="Clientes por página"
-        page-text="{0} de {1}"
+        v-model="filters.Codigo"
+        label="Filtrar Código"
+        density="compact"
         variant="outlined"
-        density="comfortable"
         hide-details
-        style="max-width: 320px"
+        class="filter-field"
       />
+      <v-text-field
+        v-model="filters.Nome"
+        label="Filtrar Nome"
+        density="compact"
+        variant="outlined"
+        hide-details
+        class="filter-field"
+      />
+      <v-text-field
+        v-model="filters.CPF_CNPJ"
+        label="Filtrar CPF/CNPJ"
+        density="compact"
+        variant="outlined"
+        hide-details
+        class="filter-field"
+      />
+      <v-text-field
+        v-model="filters.Cidade"
+        label="Filtrar Cidade"
+        density="compact"
+        variant="outlined"
+        hide-details
+        class="filter-field"
+      />
+
+      <!-- Botões -->
       <v-btn class="ml-2" color="primary" @click="$emit('OpenAdd')">
         <v-icon start>mdi-plus</v-icon> Novo
       </v-btn>
-      <v-btn icon class="ml-1" @click="$emit('Refresh')"><v-icon>mdi-reload</v-icon></v-btn>
+      <v-btn icon class="ml-1" @click="$emit('Refresh')">
+        <v-icon>mdi-reload</v-icon>
+      </v-btn>
     </v-toolbar>
 
     <v-divider />
 
-    <!-- wrapper com altura limitada -->
     <div class="table-scroll">
       <v-data-table
         :headers="headers"
@@ -48,8 +65,12 @@
           <v-skeleton-loader type="table-row@5" />
         </template>
 
-        <template #item.DataHoraCadastro="{ value }">{{ formatDate(value) }}</template>
-        <template #item.Validade="{ value }">{{ value ? formatDate(value) : '-' }}</template>
+        <template #item.DataHoraCadastro="{ value }">
+          {{ formatDate(value) }}
+        </template>
+        <template #item.Validade="{ value }">
+          {{ value ? formatDate(value) : '-' }}
+        </template>
 
         <template #item.actions="{ item }">
           <div class="action-buttons">
@@ -62,7 +83,6 @@
             >
               <v-icon>mdi-file-edit-outline</v-icon>
             </v-btn>
-
             <v-btn
               size="small"
               color="error"
@@ -95,6 +115,12 @@ export default {
   emits: ['OpenAdd', 'EditClient', 'DeleteClient', 'Refresh'],
   data() {
     return {
+      filters: {
+        Codigo: '',
+        Nome: '',
+        CPF_CNPJ: '',
+        Cidade: ''
+      },
       headers: [
         { title: 'ID', key: 'ID', sortable: true },
         { title: 'Código', key: 'Codigo', sortable: true },
@@ -107,21 +133,23 @@ export default {
         { title: 'Cadastro', key: 'DataHoraCadastro' },
         { title: 'Validade', key: 'Validade' },
         { title: 'Ações', key: 'actions', sortable: false }
-      ],
-      search: ''
+      ]
     }
   },
   computed: {
     computedItems() {
-      if (!this.search) return this.clients
-      const s = this.search.toLowerCase()
-      return this.clients.filter(c =>
-        String(c.Nome || '').toLowerCase().includes(s) ||
-        String(c.Codigo || '').toLowerCase().includes(s) ||
-        String(c.CPF_CNPJ || '').toLowerCase().includes(s) ||
-        String(c.Cidade || '').toLowerCase().includes(s) ||
-        String(c.UF || '').toLowerCase().includes(s)
-      )
+      return this.clients.filter(c => {
+        return (
+          (!this.filters.Codigo ||
+            String(c.Codigo || '').toLowerCase().includes(this.filters.Codigo.toLowerCase())) &&
+          (!this.filters.Nome ||
+            String(c.Nome || '').toLowerCase().includes(this.filters.Nome.toLowerCase())) &&
+          (!this.filters.CPF_CNPJ ||
+            String(c.CPF_CNPJ || '').toLowerCase().includes(this.filters.CPF_CNPJ.toLowerCase())) &&
+          (!this.filters.Cidade ||
+            String(c.Cidade || '').toLowerCase().includes(this.filters.Cidade.toLowerCase()))
+        )
+      })
     }
   },
   methods: {
@@ -161,7 +189,14 @@ export default {
   overflow: auto;
 }
 
+.filter-field {
+  margin-right: 12px;
+  max-width: 200px;
+}
+
 @media (max-width: 960px) {
-  .table-scroll { max-height: 55vh; }
+  .table-scroll {
+    max-height: 55vh;
+  }
 }
 </style>
