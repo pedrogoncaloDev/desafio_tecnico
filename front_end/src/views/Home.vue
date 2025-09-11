@@ -19,6 +19,7 @@
     :dialog="showAdd"
     @close="closeAll"
     @created="onCreated"
+    @notify="notify"
   />
 
   <EditClientModal
