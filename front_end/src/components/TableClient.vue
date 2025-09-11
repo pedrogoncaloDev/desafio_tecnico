@@ -104,8 +104,6 @@
 </template>
 
 <script>
-import { format } from 'date-fns'
-
 export default {
   name: 'TableClient',
   props: {
@@ -156,7 +154,10 @@ export default {
     formatDate(value) {
       if (!value) return '-'
       try {
-        return format(new Date(value), 'dd/MM/yyyy')
+        const onlyDate = String(value).split('T')[0] 
+        const [y, m, d] = onlyDate.split('-')
+
+        return `${d}/${m}/${y}`
       } catch {
         return value
       }

@@ -117,7 +117,21 @@ export default {
         client: {
             immediate: true,
             handler(v) {
-                this.form = v ? JSON.parse(JSON.stringify(v)) : {}
+                if (v) {
+                    const clone = JSON.parse(JSON.stringify(v))
+                    // normaliza data no formato YYYY-MM-DD
+                    if (clone.Validade) {
+                        try {
+                            const d = new Date(clone.Validade)
+                            if (!isNaN(d)) {
+                                clone.Validade = d.toISOString().split('T')[0] // YYYY-MM-DD
+                            }
+                        } catch { clone.Validade = '' }
+                    }
+                    this.form = clone
+                } else {
+                    this.form = {}
+                }
             }
         }
     },
@@ -130,6 +144,7 @@ export default {
             let cep = String(this.form.CEP).replace(/\D/g, '')
 
             if (!/^\d{8}$/.test(cep)) {
+                this.$emit('notify', { color: 'error', msg: 'CEP inválido' })
                 return false
             }
 
@@ -144,7 +159,7 @@ export default {
                 this.form.Complemento = endereco.complemento || ''
                 return true
             } else {
-                this.form.CEP = ''
+                this.$emit('notify', { color: 'error', msg: 'CEP não encontrado' })
                 return false
             }
         },
