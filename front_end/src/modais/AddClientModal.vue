@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="localDialog" max-width="840">
+    <v-dialog v-model="localDialog" max-width="840" persistent>
         <v-card>
             <v-progress-linear v-if="submitting" indeterminate absolute color="primary" />
             <v-card-title class="text-h6">Adicionar Cliente</v-card-title>

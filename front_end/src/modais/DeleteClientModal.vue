@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="localDialog" max-width="520">
+    <v-dialog v-model="localDialog" max-width="520" persistent>
         <v-card>
             <v-progress-linear v-if="submitting" indeterminate absolute color="primary" />
 
