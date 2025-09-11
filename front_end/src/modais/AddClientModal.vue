@@ -33,9 +33,9 @@
 
                         <!-- Campos opcionais -->
                         <v-col cols="12" md="3">
-                            <v-text-field v-model.number="form.CEP" label="CEP" type="number" :disabled="submitting" />
+                            <v-text-field v-model="form.CEP" label="CEP" type="text" :disabled="submitting"
+                                @blur="onCepBlur" />
                         </v-col>
-
                         <v-col cols="12" md="9">
                             <v-text-field v-model="form.Logradouro" label="Logradouro" :rules="[rules.max100]"
                                 :disabled="submitting" />
@@ -99,6 +99,7 @@
 
 <script>
 import { createCliente } from '@/services/clientsService'
+import { getEnderecoByCep } from '@/services/cepService'
 
 const DEFAULT_FORM = {
     idUsuario: 1,
@@ -158,6 +159,20 @@ export default {
     },
     watch: { dialog(v) { this.localDialog = v } },
     methods: {
+        async onCepBlur() {
+            if (!this.form.CEP) return
+            const endereco = await getEnderecoByCep(String(this.form.CEP))
+            if (endereco) {
+                this.form.Logradouro = endereco.logradouro || ''
+                this.form.Bairro = endereco.bairro || ''
+                this.form.Cidade = endereco.localidade || ''
+                this.form.UF = endereco.uf || ''
+                this.form.Complemento = endereco.complemento || ''
+            } else {
+                this.$emit('notify', { color: 'error', msg: 'CEP não encontrado' })
+            }
+        },
+
         async submit() {
             const trySubmit = async () => {
                 try {
