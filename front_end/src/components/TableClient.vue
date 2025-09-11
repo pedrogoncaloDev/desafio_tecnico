@@ -52,13 +52,27 @@
         <template #item.Validade="{ value }">{{ value ? formatDate(value) : '-' }}</template>
 
         <template #item.actions="{ item }">
-          <v-btn icon size="small" color="primary" @click="$emit('EditClient', item)">
-            <v-icon>mdi-file-edit-outline</v-icon>
-          </v-btn>
-          
-          <v-btn icon size="small" color="error" @click="$emit('DeleteClient', item)">
-            <v-icon>mdi-delete-outline</v-icon>
-          </v-btn>
+          <div class="action-buttons">
+            <v-btn
+              size="small"
+              color="primary"
+              variant="tonal"
+              class="action-btn"
+              @click="$emit('EditClient', item)"
+            >
+              <v-icon>mdi-file-edit-outline</v-icon>
+            </v-btn>
+
+            <v-btn
+              size="small"
+              color="error"
+              variant="tonal"
+              class="action-btn"
+              @click="$emit('DeleteClient', item)"
+            >
+              <v-icon>mdi-delete-outline</v-icon>
+            </v-btn>
+          </div>
         </template>
 
         <template #no-data>
@@ -124,17 +138,29 @@ export default {
 </script>
 
 <style scoped>
+.action-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.action-btn {
+  min-width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  padding: 0;
+  justify-content: center;
+  align-items: center;
+}
+
 .grid-card {
   border-radius: 12px;
 }
 
-/* limita a altura visível da tabela, com rolagem interna */
 .table-scroll {
-  max-height: 65vh;   /* ajuste aqui se quiser “menos” tela, ex: 50vh */
+  max-height: 65vh;
   overflow: auto;
 }
 
-/* em telas menores, reduz um pouco mais */
 @media (max-width: 960px) {
   .table-scroll { max-height: 55vh; }
 }
