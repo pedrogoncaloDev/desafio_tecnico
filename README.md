@@ -24,6 +24,14 @@ Permite realizar operações de **CRUD de clientes** (criar, listar, editar e ex
 ## 🚀 Como Executar o Projeto
 
 ### Pré-requisitos
+- Node.js: v18.x ou superior
+- npm: v9.x ou superior
+- MySQL: v8.x
+- Git: v2.x ou superior
+- Vue.js: v3.x (via Vite)
+- Vuetify: v3.x
+- Express: v4.x
+- Zod: v3.x
 
 ### 🔧 Instalação
 
