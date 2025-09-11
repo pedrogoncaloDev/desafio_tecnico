@@ -7,31 +7,26 @@
             <v-card-text>
                 <v-form ref="form" @submit.prevent="submit">
                     <v-row>
-                        <!-- Codigo (obrigatório) -->
                         <v-col cols="12" md="4">
                             <v-text-field v-model="form.Codigo" label="Código" :rules="[rules.req, rules.max15]"
                                 :disabled="submitting" />
                         </v-col>
 
-                        <!-- idUsuario (obrigatório numérico positivo) -->
                         <v-col cols="12" md="6">
                             <v-text-field v-model.number="form.idUsuario" label="idUsuario" type="number"
                                 :rules="[rules.reqNum]" :disabled="submitting" />
                         </v-col>
 
-                        <!-- Nome (obrigatório) -->
                         <v-col cols="12" md="8">
                             <v-text-field v-model="form.Nome" label="Nome" :rules="[rules.req, rules.max150]"
                                 :disabled="submitting" />
                         </v-col>
 
-                        <!-- CPF_CNPJ (obrigatório) -->
                         <v-col cols="12" md="4">
                             <v-text-field v-model="form.CPF_CNPJ" label="CPF/CNPJ" :rules="[rules.req, rules.max20]"
-                                :disabled="submitting" />
+                                :disabled="submitting" @blur="onCpfCnpjBlur" />
                         </v-col>
 
-                        <!-- Campos opcionais -->
                         <v-col cols="12" md="3">
                             <v-text-field v-model="form.CEP" label="CEP" type="text" :disabled="submitting"
                                 @blur="onCepBlur" />
@@ -129,51 +124,75 @@ export default {
             form: { ...DEFAULT_FORM },
             submitting: false,
             rules: {
-                req: (v) => !!String(v || '').trim() || 'Obrigatório',
-                reqNum: (v) =>
-                    (!!v && Number(v) > 0) || 'Obrigatório (número positivo)',
-                reqCnpj: (v) =>
-                    !!String(v || '').trim() || 'CPF/CNPJ é obrigatório',
-                uf: (v) =>
-                    !v || v.length === 2 || 'UF deve ter 2 caracteres',
-                date: (v) =>
-                    !v ||
-                    /^\d{4}-\d{2}-\d{2}$/.test(v) ||
-                    'Formato esperado: YYYY-MM-DD',
-                max15: (v) =>
-                    !v || String(v).length <= 15 || 'Máximo 15 caracteres',
-                max20: (v) =>
-                    !v || String(v).length <= 20 || 'Máximo 20 caracteres',
-                max50: (v) =>
-                    !v || String(v).length <= 50 || 'Máximo 50 caracteres',
-                max60: (v) =>
-                    !v || String(v).length <= 60 || 'Máximo 60 caracteres',
-                max100: (v) =>
-                    !v || String(v).length <= 100 || 'Máximo 100 caracteres',
-                max120: (v) =>
-                    !v || String(v).length <= 120 || 'Máximo 120 caracteres',
-                max150: (v) =>
-                    !v || String(v).length <= 150 || 'Máximo 150 caracteres'
+                req: v => !!String(v || '').trim() || 'Obrigatório',
+                reqNum: v => (!!v && Number(v) > 0) || 'Obrigatório (número positivo)',
+                uf: v => !v || v.length === 2 || 'UF deve ter 2 caracteres',
+                date: v => !v || /^\d{4}-\d{2}-\d{2}$/.test(v) || 'Formato esperado: YYYY-MM-DD',
+                max15: v => !v || String(v).length <= 15 || 'Máximo 15 caracteres',
+                max20: v => !v || String(v).length <= 20 || 'Máximo 20 caracteres',
+                max50: v => !v || String(v).length <= 50 || 'Máximo 50 caracteres',
+                max60: v => !v || String(v).length <= 60 || 'Máximo 60 caracteres',
+                max100: v => !v || String(v).length <= 100 || 'Máximo 100 caracteres',
+                max120: v => !v || String(v).length <= 120 || 'Máximo 120 caracteres',
+                max150: v => !v || String(v).length <= 150 || 'Máximo 150 caracteres'
             }
         }
     },
     watch: { dialog(v) { this.localDialog = v } },
     methods: {
         async onCepBlur() {
-            if (!this.form.CEP) return
-            const endereco = await getEnderecoByCep(String(this.form.CEP))
+            if (!this.form.CEP) return true
+
+            let cep = String(this.form.CEP).replace(/\D/g, '')
+
+            if (!/^\d{8}$/.test(cep)) {
+                return false
+            }
+
+            this.form.CEP = cep.replace(/(\d{5})(\d{3})/, '$1-$2')
+
+            const endereco = await getEnderecoByCep(cep)
             if (endereco) {
                 this.form.Logradouro = endereco.logradouro || ''
                 this.form.Bairro = endereco.bairro || ''
                 this.form.Cidade = endereco.localidade || ''
                 this.form.UF = endereco.uf || ''
                 this.form.Complemento = endereco.complemento || ''
+                return true
             } else {
                 this.$emit('notify', { color: 'error', msg: 'CEP não encontrado' })
+                this.form.CEP = ''
+                return false
+            }
+        },
+
+        onCpfCnpjBlur() {
+            if (!this.form.CPF_CNPJ) return false
+            let value = String(this.form.CPF_CNPJ).replace(/\D/g, '')
+
+            if (value.length === 11) {
+                this.form.CPF_CNPJ = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+                return true
+            } else if (value.length === 14) {
+                this.form.CPF_CNPJ = value.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
+                return true
+            } else {
+                this.$emit('notify', { color: 'error', msg: 'CPF/CNPJ inválido' })
+                this.form.CPF_CNPJ = ''
+                return false
             }
         },
 
         async submit() {
+            const f = this.$refs.form
+            const cpfOk = this.onCpfCnpjBlur()
+            const cepOk = await this.onCepBlur()
+
+            if (cpfOk === false || cepOk === false) {
+                this.$emit('notify', { color: 'error', msg: 'Corrija os campos inválidos.' })
+                return
+            }
+
             const trySubmit = async () => {
                 try {
                     this.submitting = true
@@ -190,7 +209,6 @@ export default {
                 }
             }
 
-            const f = this.$refs.form
             if (f?.validate) {
                 const { valid } = await f.validate()
                 if (valid) await trySubmit()

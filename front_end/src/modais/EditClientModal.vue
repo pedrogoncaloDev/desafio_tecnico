@@ -27,8 +27,7 @@
                         </v-col>
 
                         <v-col cols="12" md="3">
-                            <v-text-field v-model="form.CEP" label="CEP" type="text" :disabled="submitting"
-                                @blur="onCepBlur" />
+                            <v-text-field v-model="form.CEP" label="CEP" type="text" @blur="onCepBlur" />
                         </v-col>
                         <v-col cols="12" md="9">
                             <v-text-field v-model="form.Logradouro" label="Logradouro" :rules="[rules.max100]" />
@@ -124,26 +123,50 @@ export default {
     },
     methods: {
         formatDate,
+
         async onCepBlur() {
-            if (!this.form.CEP) return
-            const endereco = await getEnderecoByCep(String(this.form.CEP))
+            if (!this.form.CEP) return true
+
+            let cep = String(this.form.CEP).replace(/\D/g, '')
+
+            if (!/^\d{8}$/.test(cep)) {
+                return false
+            }
+
+            this.form.CEP = cep.replace(/(\d{5})(\d{3})/, '$1-$2')
+
+            const endereco = await getEnderecoByCep(cep)
             if (endereco) {
                 this.form.Logradouro = endereco.logradouro || ''
                 this.form.Bairro = endereco.bairro || ''
                 this.form.Cidade = endereco.localidade || ''
                 this.form.UF = endereco.uf || ''
                 this.form.Complemento = endereco.complemento || ''
+                return true
             } else {
-                this.$emit('notify', { color: 'error', msg: 'CEP não encontrado' })
+                this.form.CEP = ''
+                return false
             }
         },
+
         async submit() {
+            const f = this.$refs.form
+            const cepOk = await this.onCepBlur()
+
+            if (cepOk === false) {
+                this.$emit('notify', { color: 'error', msg: 'Corrija os campos inválidos.' })
+                return
+            }
+
             const trySubmit = async () => {
                 try {
                     this.submitting = true
                     if (this.form.UF) this.form.UF = this.form.UF.toUpperCase()
 
-                    const updated = await updateCliente(this.form.ID, { ...this.form })
+                    const payload = { ...this.form }
+                    delete payload.DataHoraCadastro
+
+                    const updated = await updateCliente(this.form.ID, payload)
                     this.$emit('save', updated)
                     this.$emit('notify', { color: 'success', msg: 'Cliente atualizado com sucesso!' })
                     this.$emit('close')
@@ -155,7 +178,6 @@ export default {
                 }
             }
 
-            const f = this.$refs.form
             if (f?.validate) {
                 const { valid } = await f.validate()
                 if (valid) await trySubmit()

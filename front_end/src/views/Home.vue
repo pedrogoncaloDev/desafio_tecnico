@@ -27,6 +27,7 @@
     :client="selected"
     @close="closeAll"
     @save="onEdited"
+    @notify="notify"
   />
 
   <DeleteClientModal
