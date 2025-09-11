@@ -10,7 +10,7 @@ const pool = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    timezone: 'Z' // armazena DATETIME em UTC
+    timezone: 'Z'
 });
 
 module.exports = { pool };

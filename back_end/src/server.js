@@ -24,18 +24,13 @@ app.use(cors({
     maxAge: 86400
 }));
 
-// Preflight
 app.options('*', cors());
-
 app.use(express.json());
-
-// healthcheck
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
 // rotas
 app.use('/clientes', clientesRouter);
 
-// erro CORS explícito
 app.use((err, req, res, next) => {
     if (err && err.message === 'Not allowed by CORS') {
         return res.status(403).json({ error: 'Origin não permitido' });
@@ -43,7 +38,6 @@ app.use((err, req, res, next) => {
     return next(err);
 });
 
-// erro genérico
 app.use(errorHandler);
 
 const PORT = Number(process.env.PORT || 3000);

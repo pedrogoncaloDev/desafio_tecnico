@@ -6,21 +6,21 @@ const router = express.Router();
 
 // --------- Schemas (Zod) ----------
 const baseSchema = z.object({
-    idUsuario: z.number().int().positive(),
+    idUsuario: z.coerce.number().int().positive(),
     Codigo: z.string().min(1).max(15),
     Nome: z.string().min(1).max(150),
     CPF_CNPJ: z.string().min(1).max(20),
-    CEP: z.number().int().optional().nullable(),
-    Logradouro: z.string().max(100).optional().nullable(),
-    Endereco: z.string().max(120).optional().nullable(),
-    Numero: z.string().max(20).optional().nullable(),
-    Bairro: z.string().max(50).optional().nullable(),
-    Cidade: z.string().max(60).optional().nullable(),
-    UF: z.string().length(2).optional().nullable(),
-    Complemento: z.string().max(150).optional().nullable(),
-    Fone: z.string().max(15).optional().nullable(),
-    LimiteCredito: z.number().optional().nullable(),
-    Validade: z.string().date().optional().nullable() // aceita 'YYYY-MM-DD'
+    CEP: z.coerce.number().int().nullable().optional(),
+    Logradouro: z.string().max(100).nullable().optional(),
+    Endereco: z.string().max(120).nullable().optional(),
+    Numero: z.string().max(20).nullable().optional(),
+    Bairro: z.string().max(50).nullable().optional(),
+    Cidade: z.string().max(60).nullable().optional(),
+    UF: z.string().length(2).nullable().optional(),
+    Complemento: z.string().max(150).nullable().optional(),
+    Fone: z.string().max(20).nullable().optional(),
+    LimiteCredito: z.coerce.number().nullable().optional(),
+    Validade: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional()
 }).strict();
 
 const createSchema = baseSchema;
@@ -108,13 +108,20 @@ router.post('/', async (req, res, next) => {
         const payload = createSchema.parse(req.body);
 
         const sql = `
-      INSERT INTO clientes (
-        idUsuario, Codigo, Nome, CPF_CNPJ, CEP, Logradouro, Endereco, Numero,
-        Bairro, Cidade, UF, Complemento, Fone, LimiteCredito, Validade
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-    `;
-        const [result] = await pool.query(sql, pickFields(payload));
+            INSERT INTO clientes (
+                idUsuario, Codigo, Nome, CPF_CNPJ, CEP, Logradouro, Endereco, Numero,
+                Bairro, Cidade, UF, Complemento, Fone, LimiteCredito, Validade
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        `;
+        const params = [
+            payload.idUsuario, payload.Codigo, payload.Nome, payload.CPF_CNPJ,
+            payload.CEP ?? null, payload.Logradouro ?? null, payload.Endereco ?? null,
+            payload.Numero ?? null, payload.Bairro ?? null, payload.Cidade ?? null,
+            payload.UF ?? null, payload.Complemento ?? null, payload.Fone ?? null,
+            payload.LimiteCredito ?? null, payload.Validade ?? null
+        ];
 
+        const [result] = await pool.query(sql, params);
         const [rows] = await pool.query(`SELECT * FROM clientes WHERE ID = ?`, [result.insertId]);
         res.status(201).json(rows[0]);
     } catch (err) {
@@ -126,12 +133,15 @@ router.post('/', async (req, res, next) => {
 router.put('/:id', async (req, res, next) => {
     try {
         const id = Number(req.params.id);
-        if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'ID inválido' });
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({ error: 'ID inválido' });
+        }
 
         const data = updateSchema.parse(req.body);
-        if (!Object.keys(data).length) return res.status(400).json({ error: 'Nada para atualizar' });
+        if (!Object.keys(data).length) {
+            return res.status(400).json({ error: 'Nada para atualizar' });
+        }
 
-        // monta SET dinâmico
         const columnsMap = {
             idUsuario: 'idUsuario',
             Codigo: 'Codigo',
@@ -158,13 +168,19 @@ router.put('/:id', async (req, res, next) => {
                 params.push(v ?? null);
             }
         }
-        if (!sets.length) return res.status(400).json({ error: 'Campos inválidos' });
+
+        if (!sets.length) {
+            return res.status(400).json({ error: 'Campos inválidos' });
+        }
 
         const sql = `UPDATE clientes SET ${sets.join(', ')} WHERE ID = ?`;
         params.push(id);
 
         const [result] = await pool.query(sql, params);
-        if (result.affectedRows === 0) return res.status(404).json({ error: 'Não encontrado' });
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Não encontrado' });
+        }
 
         const [rows] = await pool.query(`SELECT * FROM clientes WHERE ID = ?`, [id]);
         res.json(rows[0]);
