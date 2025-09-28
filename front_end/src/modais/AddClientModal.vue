@@ -13,7 +13,7 @@
                         </v-col>
 
                         <v-col cols="12" md="6">
-                            <v-text-field v-model.number="form.idUsuario" label="idUsuario" type="number"
+                            <v-text-field v-model.number="form.idUsuario" label="ID Usuario" type="number"
                                 :rules="[rules.reqNum]" :disabled="submitting" />
                         </v-col>
 
@@ -33,11 +33,6 @@
                         </v-col>
                         <v-col cols="12" md="9">
                             <v-text-field v-model="form.Logradouro" label="Logradouro" :rules="[rules.max100]"
-                                :disabled="submitting" />
-                        </v-col>
-
-                        <v-col cols="12" md="6">
-                            <v-text-field v-model="form.Endereco" label="Endereço" :rules="[rules.max120]"
                                 :disabled="submitting" />
                         </v-col>
                         <v-col cols="12" md="3">
@@ -103,7 +98,6 @@ const DEFAULT_FORM = {
     CPF_CNPJ: '',
     CEP: null,
     Logradouro: '',
-    Endereco: '',
     Numero: '',
     Bairro: '',
     Cidade: '',
